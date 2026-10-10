@@ -1,0 +1,21 @@
+# Logins, secrets and personal settings (home location, ntfy topics): never commit
+plugcheck.cfg
+bluelink.cfg
+email.cfg
+token.json
+
+# Python environment and caches
+venv/
+__pycache__/
+*.pyc
+
+# Runtime state and logs
+plugcheck.state
+arrival_checks.json
+*.log
+*.tmp
+
+# Data and generated output: back these up separately
+*.csv
+history/
+reports/

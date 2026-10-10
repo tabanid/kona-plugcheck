@@ -1,0 +1,12 @@
+[Unit]
+Description=Kona arrival plug-in check
+After=network-online.target
+
+[Service]
+WorkingDirectory=%h/konaev/plugcheck
+ExecStart=%h/konaev/plugcheck/venv/bin/python -u kona_arrival_listener.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target

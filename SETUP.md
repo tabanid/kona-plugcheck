@@ -95,9 +95,10 @@ How the evening checks behave:
 - **9:30:** asks for fresh data (one car wake-up).
 - **Later checks:** use cached data only.
 - **Before alerting:** if a later check thinks the car is unplugged, it confirms with fresh data first.
-- **Stopping early:** once the car is confirmed home and plugged in, or once an alert has gone out,
-  the rest of that night's checks are skipped.
-- **Alerts:** you only hear from it if the car is home and NOT plugged in.
+- **Stopping early:** once the car is confirmed home and plugged in, the rest of that night's checks are skipped.
+- **Alerts:** you only hear from it if the car is home and NOT plugged in. After the first reminder,
+  the 10:15 and 11:00 checks send "still not plugged in" follow-ups, unless the battery was above 70%
+  at the first reminder (`followup_max_soc` in `plugcheck.cfg`).
 
 ## Car log
 

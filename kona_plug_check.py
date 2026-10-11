@@ -42,6 +42,7 @@ STALE_HOURS = P.getfloat("force_refresh_if_older_than_hours", 3)
 ALERT_IF_AWAY_AT_LAST_CHECK = P.getboolean("alert_if_away_at_last_check", False)
 LAST_CHECK_HOUR = P.getint("last_check_hour", 23)
 STATE_FILE = HERE / "plugcheck.state"
+FOLLOWUP_MAX_SOC = P.getfloat("followup_max_soc", 70)
 LOG_FILE = HERE / "plugcheck.log"
 TOKEN_FILE = HERE / "token.json"
 CAR_LOG = HERE / "car_log.csv"
@@ -297,8 +298,11 @@ def check(force=False, status_only=False, once_per_night=True, always_report=Fal
 
 
 def evening():
-    """Scheduled 9:30-11 pm check: one forced refresh per night at most,
-    and nothing more once the car is confirmed home and plugged in."""
+    """Scheduled 9:30-11 pm check. First check of the night uses fresh data;
+    later ones use cached data and confirm with fresh data before alerting.
+    Stops once the car is confirmed home and plugged in. If it isn't, later
+    checks send follow-up reminders unless the battery was above
+    followup_max_soc at the first alert."""
     st = _state()
     if st.get("done"):
         log("evening check: already settled tonight, skipping")
@@ -323,8 +327,17 @@ def evening():
     if home and plugged:
         _set(done=True)
     elif home and not plugged:
-        notify("Plug in the Kona", f"Kona is home but not plugged in (battery {soc}%).")
-        mark_alerted()
+        now = f"{dt.datetime.now():%H:%M}"
+        if not st.get("alerted"):
+            notify("Plug in the Kona", f"Kona is home but not plugged in (battery {soc}%).")
+            # no follow-ups tonight if the battery is already well charged
+            done = soc is not None and soc > FOLLOWUP_MAX_SOC
+            _set(alerted=True, done=done, first_soc=soc)
+            if done:
+                log(f"battery {soc}% > {FOLLOWUP_MAX_SOC}%: no follow-up reminders tonight")
+        else:
+            notify("Kona still not plugged in", f"Still not plugged in at {now} (battery {soc}%).")
+            _set(followups=st.get("followups", 0) + 1)
 
 
 def main():
